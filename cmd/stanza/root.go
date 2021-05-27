@@ -30,6 +30,7 @@ type RootFlags struct {
 	CPUProfileDuration time.Duration
 	MemProfile         string
 	MemProfileDelay    time.Duration
+	Validate           bool
 
 	LogFile string
 	Debug   bool
@@ -53,6 +54,7 @@ func NewRootCmd() *cobra.Command {
 	rootFlagSet.StringVar(&rootFlags.PluginDir, "plugin_dir", defaultPluginDir(), "path to the plugin directory")
 	rootFlagSet.StringVar(&rootFlags.DatabaseFile, "database", "", "path to the stanza offset database")
 	rootFlagSet.BoolVar(&rootFlags.Debug, "debug", false, "debug logging")
+	rootFlagSet.BoolVar(&rootFlags.Validate, "validate", false, "validate a configuration and exit")
 
 	// Profiling flags
 	rootFlagSet.IntVar(&rootFlags.PprofPort, "pprof_port", 0, "listen port for pprof profiling")
@@ -107,6 +109,11 @@ func runRoot(command *cobra.Command, _ []string, flags *RootFlags) {
 	}
 
 	profilingWg := startProfiling(ctx, flags, logger)
+
+	if flags.Validate {
+		logger.Infow("Configuration is valid")
+		os.Exit(1)
+	}
 
 	err = service.Run()
 	if err != nil {
